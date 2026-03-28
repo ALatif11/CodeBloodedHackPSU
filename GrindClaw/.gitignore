@@ -1,0 +1,5 @@
+node_modules/
+apikeys.env
+.env
+.DS_Store
+*.env

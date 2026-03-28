@@ -1,5 +1,5 @@
-venv/
+node_modules/
+apikeys.env
 .env
-__pycache__/
-*.__pyc
 .DS_Store
+*.env

@@ -1,6 +1,0 @@
-anthropic # Openclaw Integration
-discord.py # Discord Bot
-twilio # Whatsapp/SMS Messaging
-schedule # Task Scheduling 
-python-dotenv # API Keys stored in .env file
-requests # HTTP requests

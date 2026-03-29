@@ -19,14 +19,19 @@ const NGROK_URL = process.env.NGROK_URL;
 
 // Initial call handler
 app.post('/call', (req, res) => {
-  res.type('text/xml');
-  res.send(`
-    <Response>
-      <Say>Hey! This is GrindClaw. What tasks do you want to get done today? List them out, and say done when you're finished.</Say>
-      <Gather input="speech" action="/save-tasks" timeout="10" speechTimeout="auto">
-      </Gather>
-    </Response>
-  `);
+  try {
+    res.type('text/xml');
+    res.send(`
+      <Response>
+        <Say>Hey! This is GrindClaw. What tasks do you want to get done today? List them all out and I'll add them to your list.</Say>
+        <Gather input="speech" action="/save-tasks" timeout="10" speechTimeout="auto">
+        </Gather>
+      </Response>
+    `);
+  } catch (err) {
+    console.error('Error in /call route:', err);
+    res.status(500).send('Error');
+  }
 });
 
 app.post('/save-tasks', async (req, res) => {
@@ -100,7 +105,16 @@ app.post('/save-tasks', async (req, res) => {
   });
 
   const parseData = await parseResponse.json();
-  const taskList = JSON.parse(parseData.choices[0].message.content);
+  let taskList;
+  try {
+    const raw = parseData.choices[0].message.content;
+    console.log('Raw parse response:', raw);
+    taskList = JSON.parse(raw);
+    console.log('Parsed task list:', taskList);
+  } catch (e) {
+    console.log('Failed to parse tasks:', e);
+    taskList = [];
+  }
   console.log('Parsed tasks:', taskList);
 
   const todosPath = path.join(os.homedir(), '.openclaw', 'workspace', 'todos.json');
@@ -294,3 +308,7 @@ app.listen(3000, () => {
 });
 
 discord.login(process.env.DISCORD_BOT_TOKEN);
+
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled error:', err);
+});

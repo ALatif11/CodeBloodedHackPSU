@@ -60,7 +60,7 @@ app.post('/save-tasks', async (req, res) => {
         'xi-api-key': process.env.ELEVENLABS_API_KEY
       },
       body: JSON.stringify({
-        text: `Let's get it! You've got ${pendingCount} tasks on your list today. I'll check in on you. Now go crush it!`,
+        text: `Let's get it! You've got ${pendingCount} tasks on your list today.`,
         model_id: 'eleven_multilingual_v2',
         voice_settings: { stability: 0.5, similarity_boost: 0.75 }
       })
@@ -81,32 +81,55 @@ app.post('/save-tasks', async (req, res) => {
   }
 
   // Otherwise save the tasks and keep gathering
-  const taskList = userSpeech.split(/,| and /i).map(t => t.trim()).filter(Boolean);
+  const parseResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+  },
+  body: JSON.stringify({
+    model: 'gpt-4o-mini',
+    max_tokens: 200,
+    messages: [
+      {
+        role: 'user',
+        content: `Extract a list of tasks from this speech. Return ONLY a JSON array of objects, nothing else. No explanation, no markdown, just the array. Each object should have "task" (the thing to do) and "time" (the time if mentioned, otherwise null). Example: [{"task": "go to the gym", "time": "8am"}, {"task": "finish homework", "time": null}]. Speech: "${userSpeech}"`
+      }
+    ]
+  })
+  });
+
+  const parseData = await parseResponse.json();
+  const taskList = JSON.parse(parseData.choices[0].message.content);
+  console.log('Parsed tasks:', taskList);
 
   const todosPath = path.join(os.homedir(), '.openclaw', 'workspace', 'todos.json');
   let data = { todos: [] };
   if (fs.existsSync(todosPath)) {
     try {
       const raw = fs.readFileSync(todosPath, 'utf8');
-    if (raw.trim()) data = JSON.parse(raw);
+      if (raw.trim()) {
+        const parsed = JSON.parse(raw);
+        data = { todos: Array.isArray(parsed.todos) ? parsed.todos : [] };
+      }
     } catch (e) {
       console.log('todos.json was corrupted, resetting...');
       data = { todos: [] };
     }
   }
 
-  taskList.forEach((task, i) => {
-    data.todos.push({
-      id: `todo_${Date.now()}_${i}`,
-      task: task,
-      priority: 'medium',
-      added: new Date().toISOString(),
-      due: null,
-      status: 'pending',
-      check_ins: 0,
-      last_check_in: null,
-      completed_at: null
-    });
+  taskList.forEach((item, i) => {
+  data.todos.push({
+    id: `todo_${Date.now()}_${i}`,
+    task: item.time ? `${item.task} at ${item.time}` : item.task,
+    priority: 'medium',
+    added: new Date().toISOString(),
+    due: null,
+    status: 'pending',
+    check_ins: 0,
+    last_check_in: null,
+    completed_at: null
+  });
   });
 
   fs.writeFileSync(todosPath, JSON.stringify(data, null, 2));

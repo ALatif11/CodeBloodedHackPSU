@@ -28,3 +28,16 @@ export declare function resolveWritableRenameTargetsForBridge<T extends {
     from: T;
     to: T;
 };
+export declare function createWritableRenameTargetResolver<T extends {
+    containerPath: string;
+}>(resolveTarget: (params: {
+    filePath: string;
+    cwd?: string;
+}) => T, ensureWritable: (target: T, action: string) => void): (params: {
+    from: string;
+    to: string;
+    cwd?: string;
+}) => {
+    from: T;
+    to: T;
+};

@@ -31,7 +31,7 @@ discord.on('messageCreate', async (message) => {
     
     await twilioClient.calls.create({
       twiml: '<Response><Say>Hey! This is GrindClaw. Time to get up and crush your goals today!</Say></Response>',
-      to: '',
+      to: process.env.USER_PHONE_NUMBER,
       from: process.env.TWILIO_PHONE_NUMBER,
     });
   }

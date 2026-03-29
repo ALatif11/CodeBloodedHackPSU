@@ -9,6 +9,9 @@ export type LegacyConfigMigration = {
     describe: string;
     apply: (raw: Record<string, unknown>, changes: string[]) => void;
 };
+export type LegacyConfigMigrationSpec = LegacyConfigMigration & {
+    legacyRules?: LegacyConfigRule[];
+};
 import { isRecord } from "../utils.js";
 export { isRecord };
 export declare const getRecord: (value: unknown) => Record<string, unknown> | null;
@@ -18,3 +21,4 @@ export declare const mapLegacyAudioTranscription: (value: unknown) => Record<str
 export declare const getAgentsList: (agents: Record<string, unknown> | null) => any[];
 export declare const resolveDefaultAgentIdFromRaw: (raw: Record<string, unknown>) => string;
 export declare const ensureAgentEntry: (list: unknown[], id: string) => Record<string, unknown>;
+export declare const defineLegacyConfigMigration: (migration: LegacyConfigMigrationSpec) => LegacyConfigMigrationSpec;

@@ -3,3 +3,4 @@ apikeys.env
 .env
 .DS_Store
 *.env
+.claude/
